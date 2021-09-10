@@ -1,0 +1,29 @@
+#section for parsing 10-Q
+#first define a function that will concatenate a list
+def concatenate(list):
+    result=''
+    for number in list:
+        result+= str(number)
+    return result
+URL='https://sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK='+cik+'&type=10-&dateb=&owner=exclude&count=100'
+page=requests.get(URL)
+soup=BeautifulSoup(page.content,'html.parser')
+results=soup.find(class_="tableFile2")
+links=results.find_all('tr')[1]
+link=links.find('a')
+documents=link.get('href')
+URL='https://sec.gov'+documents
+page=requests.get(URL)
+soup=BeautifulSoup(page.content,'html.parser')
+results=soup.find(id='formDiv')
+account=(results.find(id='secNum')).get_text()
+no=[int(i) for i in account if i.isdigit()]
+acctno=concatenate(no)
+Date=results.find(class_="formContent")
+Info=(Date.find_all(class_="info")[3]).get_text()
+no1=[int(i) for i in Info if i.isdigit()]
+periodend=concatenate(no1)
+URL='https://sec.gov/Archives/edgar/data/'+cik+'/'+acctno+'/'+(ticker.lower())+'-10q_'+periodend+'.htm'
+dfs=pd.read_html(URL,header=0)
+headers=(dfs[7])
+headers.to_excel('Python.xlsx','Sheet1') #creates an excel file export
